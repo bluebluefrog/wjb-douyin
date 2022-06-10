@@ -91,7 +91,7 @@
             <artifactId>minio</artifactId>
         </dependency>
 
-        <!-- 第三方云厂商相关的依赖 -->
+        <!-- 腾讯云厂商相关的依赖 -->
         <dependency>
             <groupId>com.tencentcloudapi</groupId>
             <artifactId>tencentcloud-sdk-java</artifactId>
