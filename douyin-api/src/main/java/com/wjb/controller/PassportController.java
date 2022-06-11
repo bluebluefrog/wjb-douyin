@@ -1,29 +1,37 @@
 package com.wjb.controller;
 
+import com.wjb.bo.RegistLoginBO;
 import com.wjb.grace.result.GraceJSONResult;
+import com.wjb.BaseInfoProperties;
+import com.wjb.grace.result.ResponseStatusEnum;
+import com.wjb.pojo.Users;
+import com.wjb.service.UserService;
 import com.wjb.utils.IPUtil;
 import com.wjb.utils.SMSUtils;
-import io.swagger.annotations.Api;
+import com.wjb.vo.UsersVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import java.util.UUID;
 
 @Slf4j
 @RequestMapping("passport")
 @RestController
-public class PassportController extends BaseController{
+public class PassportController extends BaseInfoProperties {
 
     @Autowired
     private SMSUtils smsUtils;
 
+    @Autowired
+    private UserService userService;
+
     @PostMapping("getSMSCode")
-    public Object getSMSCode(@RequestParam String mobile, HttpServletRequest request) throws Exception {
+    public GraceJSONResult getSMSCode(@RequestParam String mobile, HttpServletRequest request) throws Exception {
 
         //mobile为空什么都不返回
         if (StringUtils.isBlank(mobile)) {
@@ -37,8 +45,8 @@ public class PassportController extends BaseController{
         redisOperator.setnx60s(MOBILE_SMSCODE + ":" + userIp, userIp);
 
         //随机生成验证码并发送
-        String code = (int) (Math.random() * 9 + 1) * 100000 + "";
-        smsUtils.sendSMS("61",mobile,code);
+        String code = (int) ((Math.random() * 9 + 1) * 100000) + "";
+        //smsUtils.sendSMS("61",mobile,code);
         //日志code
         log.info(code);
 
@@ -48,4 +56,39 @@ public class PassportController extends BaseController{
         return GraceJSONResult.ok();
     }
 
+    //使用@Valid开启校验
+    @PostMapping("login")
+    public GraceJSONResult getSMSCode(@Valid @RequestBody RegistLoginBO registLoginBO, HttpServletRequest request) {
+
+        String mobile = registLoginBO.getMobile();
+        String code = registLoginBO.getSmsCode();
+        //1从redis中获得验证码校验
+        String codeInRedis = redisOperator.get(MOBILE_SMSCODE + ":" + mobile);
+        if (StringUtils.isBlank(codeInRedis) || !codeInRedis.equalsIgnoreCase(code)) {
+            return GraceJSONResult.errorCustom(ResponseStatusEnum.SMS_CODE_ERROR);
+        }
+        //2查询数据库是否存在
+        Users user = userService.queryMobileIsExist(mobile);
+
+        if (user == null) {
+            //如果为空则为用户注册 返回user继续保存会话
+            user = userService.createUser(mobile);
+        }
+
+        //3 使用redis保存用户会话信息
+        //创建token
+        String uToken = UUID.randomUUID().toString();
+        redisOperator.set(REDIS_USER_TOKEN + ":" + user.getId(), uToken);
+
+        //4 登陆后对短信验证码进行清除
+        redisOperator.del(MOBILE_SMSCODE + ":" + mobile);
+
+        //5 构建VO返回用户信息 前端需要获取用户信息和token
+        UsersVO usersVO = new UsersVO();
+        BeanUtils.copyProperties(user,usersVO);
+        usersVO.setUserToken(uToken);
+
+        return GraceJSONResult.ok(usersVO);
+
+    }
 }
