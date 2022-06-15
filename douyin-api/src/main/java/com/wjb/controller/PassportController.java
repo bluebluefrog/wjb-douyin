@@ -46,6 +46,7 @@ public class PassportController extends BaseInfoProperties {
 
         //随机生成验证码并发送
         String code = (int) ((Math.random() * 9 + 1) * 100000) + "";
+        //由于没启动短信服务暂时控制台输出
         //smsUtils.sendSMS("61",mobile,code);
         //日志code
         log.info(code);
@@ -58,7 +59,7 @@ public class PassportController extends BaseInfoProperties {
 
     //使用@Valid开启校验
     @PostMapping("login")
-    public GraceJSONResult getSMSCode(@Valid @RequestBody RegistLoginBO registLoginBO, HttpServletRequest request) {
+    public GraceJSONResult getSMSCode(@Valid @RequestBody RegistLoginBO registLoginBO) {
 
         String mobile = registLoginBO.getMobile();
         String code = registLoginBO.getSmsCode();
@@ -91,4 +92,11 @@ public class PassportController extends BaseInfoProperties {
         return GraceJSONResult.ok(usersVO);
 
     }
-}
+
+    @PostMapping("logout")
+    public GraceJSONResult logout(@RequestParam String userId, HttpServletRequest request) throws Exception {
+        //后端需要清除用户token 前端也需要清除 清除本地app中的用户信息和token会话
+        redisOperator.del(REDIS_USER_TOKEN + ":" + userId);
+        return GraceJSONResult.ok();
+        }
+    }
