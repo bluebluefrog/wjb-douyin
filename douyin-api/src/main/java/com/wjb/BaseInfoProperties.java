@@ -19,21 +19,17 @@ public class BaseInfoProperties {
     public static final String REDIS_USER_TOKEN = "redis_user_token";
     public static final String REDIS_USER_INFO = "redis_user_info";
 
-//    public Map<String,String> getErrors(BindingResult result){
-//        //收集所有错误
-//        Map<String,String> map = new HashMap<>();
-//        //获得每一项校验出现的错误
-//        List<FieldError> fieldErrors = result.getFieldErrors();
-//        for (FieldError error:fieldErrors
-//        ) {
-//            //错误所对应的属性字段名
-//            String field = error.getField();
-//            //错误信息
-//            String msg = error.getDefaultMessage();
-//            //放入map
-//            map.put(field, msg);
-//        }
-//        return map;
-//    }
+    public static final Integer COMMON_START_PAGE = 1;
+    public static final Integer COMMON_PAGE_SIZE = 10;
+
+    // 我的关注总数
+    public static final String REDIS_MY_FOLLOWS_COUNTS = "redis_my_follows_counts";
+    // 我的粉丝总数
+    public static final String REDIS_MY_FANS_COUNTS = "redis_my_fans_counts";
+
+    // 视频和发布者获赞数
+    public static final String REDIS_VLOG_BE_LIKED_COUNTS = "redis_vlog_be_liked_counts";
+    public static final String REDIS_VLOGER_BE_LIKED_COUNTS = "redis_vloger_be_liked_counts";
+
 
 }

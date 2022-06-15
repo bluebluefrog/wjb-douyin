@@ -1,13 +1,18 @@
 package com.wjb.service.impl;
 
+import com.wjb.bo.UpdatedUserBO;
 import com.wjb.enums.Sex;
+import com.wjb.enums.UserInfoModifyType;
 import com.wjb.enums.YesOrNo;
+import com.wjb.exceptions.GraceException;
+import com.wjb.grace.result.ResponseStatusEnum;
 import com.wjb.mappers.UsersMapper;
 import com.wjb.pojo.Users;
 import com.wjb.service.UserService;
 import com.wjb.utils.DateUtil;
 import com.wjb.utils.DesensitizationUtil;
 import org.n3r.idworker.Sid;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -75,6 +80,66 @@ public class UserServiceImpl implements UserService {
         usersMapper.insert(user);
 
         return user;
+    }
+
+    public Users getUserById(String userId) {
+        Users users = usersMapper.selectByPrimaryKey(userId);
+        return users;
+    }
+
+    @Transactional
+    public Users updateUserInfo(UpdatedUserBO updatedUserBO) {
+
+        //更新用户
+        Users pendingUser = new Users();
+        BeanUtils.copyProperties(updatedUserBO,pendingUser);
+
+        //Selective更新前端传来不为空的数据
+        int result = usersMapper.updateByPrimaryKeySelective(pendingUser);
+
+        if (result != 1) {
+            GraceException.display(ResponseStatusEnum.USER_INFO_UPDATED_ERROR);
+        }
+        //跟新后重新去数据库获取新的数据返回
+        return getUserById(updatedUserBO.getId());
+    }
+
+    public Users updateUserInfo(UpdatedUserBO updatedUserBO, Integer type) {
+        //构建query 传入查哪个类表
+        Example example = new Example(Users.class);
+        //创建查询条件构建器
+        Example.Criteria criteria = example.createCriteria();
+        //判断昵称是否可以修改
+        if (type == UserInfoModifyType.NICKNAME.type) {
+            //传入查询条件
+            criteria.andEqualTo("nickname", updatedUserBO.getNickname());
+            //执行
+            Users users = usersMapper.selectOneByExample(example);
+            //存在则抛异常
+            if (users != null) {
+                GraceException.display(ResponseStatusEnum.USER_INFO_UPDATED_NICKNAME_EXIST_ERROR);
+            }
+        }
+        //判断慕课号是否可以修改
+        if (type == UserInfoModifyType.IMOOCNUM.type) {
+            //传入查询条件
+            criteria.andEqualTo("imoocNum", updatedUserBO.getImoocNum());
+            //执行
+            Users users = usersMapper.selectOneByExample(example);
+            //存在则抛异常
+            if (users != null) {
+                GraceException.display(ResponseStatusEnum.USER_INFO_UPDATED_IMOOCNUM_EXIST_ERROR);
+            }
+
+            Users currentUser = getUserById(updatedUserBO.getId());
+            //修改次数不足则抛异常
+            if (currentUser.getCanImoocNumBeUpdated() == YesOrNo.NO.type) {
+                GraceException.display(ResponseStatusEnum.USER_INFO_UPDATED_IMOOCNUM_EXIST_ERROR);
+            }
+            //更新账号后设置不能更新
+            updatedUserBO.setCanImoocNumBeUpdated(YesOrNo.NO.type);
+            }
+        return updateUserInfo(updatedUserBO);
     }
 
 }
