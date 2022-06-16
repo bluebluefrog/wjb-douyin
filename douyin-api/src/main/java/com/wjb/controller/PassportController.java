@@ -1,10 +1,13 @@
 package com.wjb.controller;
 
+import com.wjb.bo.LoginWithAccountBO;
 import com.wjb.bo.RegistLoginBO;
 import com.wjb.grace.result.GraceJSONResult;
 import com.wjb.BaseInfoProperties;
 import com.wjb.grace.result.ResponseStatusEnum;
+import com.wjb.pojo.UserAccount;
 import com.wjb.pojo.Users;
+import com.wjb.service.UserAccountService;
 import com.wjb.service.UserService;
 import com.wjb.utils.IPUtil;
 import com.wjb.utils.SMSUtils;
@@ -29,6 +32,9 @@ public class PassportController extends BaseInfoProperties {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserAccountService userAccountService;
 
     @PostMapping("getSMSCode")
     public GraceJSONResult getSMSCode(@RequestParam String mobile, HttpServletRequest request) throws Exception {
@@ -59,7 +65,7 @@ public class PassportController extends BaseInfoProperties {
 
     //使用@Valid开启校验
     @PostMapping("login")
-    public GraceJSONResult getSMSCode(@Valid @RequestBody RegistLoginBO registLoginBO) {
+    public GraceJSONResult login(@Valid @RequestBody RegistLoginBO registLoginBO) {
 
         String mobile = registLoginBO.getMobile();
         String code = registLoginBO.getSmsCode();
@@ -92,6 +98,32 @@ public class PassportController extends BaseInfoProperties {
         return GraceJSONResult.ok(usersVO);
 
     }
+
+    @PostMapping("loginWithAccount")
+    public GraceJSONResult loginWithAccount(@Valid @RequestBody LoginWithAccountBO loginWithAccountBO) {
+
+        String username = loginWithAccountBO.getUsername();
+        String password = loginWithAccountBO.getPassword();
+        //acc password为空什么都不返回
+        if (StringUtils.isBlank(username)||StringUtils.isBlank(password)) {
+            return GraceJSONResult.ok();
+        }
+        UserAccount dbUserAccount = userAccountService.queryByUsername(username);
+        if (dbUserAccount == null) {
+            Users user = userService.createUser("user do not have mobile");
+            UserAccount userAccount = new UserAccount();
+            userAccount.setUserid(user.getId());
+            userAccount.setUsername(loginWithAccountBO.getUsername());
+            userAccount.setPassword(loginWithAccountBO.getPassword());
+            userAccountService.register(userAccount);
+        }else{
+            if (!dbUserAccount.getPassword().equals(loginWithAccountBO.getPassword())) {
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.FAILED);
+            }
+        }
+        return GraceJSONResult.ok();
+    }
+
 
     @PostMapping("logout")
     public GraceJSONResult logout(@RequestParam String userId, HttpServletRequest request) throws Exception {
