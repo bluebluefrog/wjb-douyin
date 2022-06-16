@@ -77,7 +77,7 @@ public class UserServiceImpl implements UserService {
         user.setUpdatedTime(new Date());
 
         //使用mapper存储user
-        usersMapper.insert(user);
+        int result = usersMapper.insert(user);
 
         return user;
     }

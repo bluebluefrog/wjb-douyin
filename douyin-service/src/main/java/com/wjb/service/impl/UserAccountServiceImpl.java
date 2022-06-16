@@ -36,7 +36,6 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (result == 0) {
             GraceException.display(ResponseStatusEnum.FAILED);
         }
-        userAccount.setPassword("");
         return userAccount;
     }
 }

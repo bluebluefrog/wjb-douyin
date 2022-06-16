@@ -32,6 +32,8 @@ public enum ResponseStatusEnum {
     FILE_NOT_EXIST_ERROR(514,false,"你所查看的文件不存在！"),
     USER_STATUS_ERROR(515,false,"用户状态参数出错！"),
     USER_NOT_EXIST_ERROR(516,false,"用户不存在！"),
+    USERNAME_EXIST(517,false,"username已存在！"),
+    LOGIN_FAIL(518,false,"密码错误！"),
 
     // 自定义系统级别异常 54x
     SYSTEM_INDEX_OUT_OF_BOUNDS(541, false, "系统错误，数组越界！"),

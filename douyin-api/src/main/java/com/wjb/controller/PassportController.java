@@ -10,12 +10,15 @@ import com.wjb.pojo.Users;
 import com.wjb.service.UserAccountService;
 import com.wjb.service.UserService;
 import com.wjb.utils.IPUtil;
+import com.wjb.utils.MD5Util;
 import com.wjb.utils.SMSUtils;
 import com.wjb.vo.UsersVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -35,6 +38,9 @@ public class PassportController extends BaseInfoProperties {
 
     @Autowired
     private UserAccountService userAccountService;
+
+    @Value("${salt}")
+    private String salt;
 
     @PostMapping("getSMSCode")
     public GraceJSONResult getSMSCode(@RequestParam String mobile, HttpServletRequest request) throws Exception {
@@ -109,19 +115,35 @@ public class PassportController extends BaseInfoProperties {
             return GraceJSONResult.ok();
         }
         UserAccount dbUserAccount = userAccountService.queryByUsername(username);
+        Users user;
         if (dbUserAccount == null) {
-            Users user = userService.createUser("user do not have mobile");
+            Users dbUser = userService.queryMobileIsExist(username);
+            if (dbUser != null) {
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.USERNAME_EXIST);
+            }
+            user = userService.createUser(username);
             UserAccount userAccount = new UserAccount();
             userAccount.setUserid(user.getId());
             userAccount.setUsername(loginWithAccountBO.getUsername());
-            userAccount.setPassword(loginWithAccountBO.getPassword());
-            userAccountService.register(userAccount);
+            String md5Password = MD5Util.sign(loginWithAccountBO.getPassword(), salt, "UTF-8");
+            userAccount.setPassword(md5Password);
+            dbUserAccount = userAccountService.register(userAccount);
         }else{
-            if (!dbUserAccount.getPassword().equals(loginWithAccountBO.getPassword())) {
-                return GraceJSONResult.errorCustom(ResponseStatusEnum.FAILED);
+            String md5Password = MD5Util.sign(loginWithAccountBO.getPassword(), salt, "UTF-8");
+            if (!dbUserAccount.getPassword().equals(md5Password)) {
+                return GraceJSONResult.errorCustom(ResponseStatusEnum.LOGIN_FAIL);
             }
+            user = userService.getUserById(dbUserAccount.getUserid());
         }
-        return GraceJSONResult.ok();
+
+        String uToken = UUID.randomUUID().toString();
+        redisOperator.set(REDIS_USER_TOKEN + ":" + user.getId(), uToken);
+
+        UsersVO usersVO = new UsersVO();
+        BeanUtils.copyProperties(user,usersVO);
+        usersVO.setUserToken(uToken);
+
+        return GraceJSONResult.ok(usersVO);
     }
 
 

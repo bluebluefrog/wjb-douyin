@@ -36,3 +36,5 @@ minio:
   secretKey: 12345678                     # 密码
   imgSize: 1024                           # 图片大小限制，单位：m
   fileSize: 1024                          # 文件大小限制，单位：m
+
+salt: jklqwhdkjqwhduowqhdqwoujdhqwjkldhqwkjd
