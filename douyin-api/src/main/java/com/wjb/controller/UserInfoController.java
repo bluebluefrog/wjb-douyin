@@ -5,7 +5,6 @@ import com.wjb.bo.UpdatedUserBO;
 import com.wjb.config.MinIOConfig;
 import com.wjb.enums.FileTypeEnum;
 import com.wjb.enums.UserInfoModifyType;
-import com.wjb.exceptions.GraceException;
 import com.wjb.grace.result.GraceJSONResult;
 import com.wjb.grace.result.ResponseStatusEnum;
 import com.wjb.pojo.Users;
@@ -18,8 +17,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.io.IOException;
 
 @Slf4j
 @RequestMapping("userInfo")

@@ -5,7 +5,6 @@ import com.wjb.enums.YesOrNo;
 import com.wjb.mappers.VlogMapper;
 import com.wjb.pojo.Vlog;
 import com.wjb.service.VlogService;
-import org.checkerframework.checker.units.qual.A;
 import org.n3r.idworker.Sid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,5 +40,11 @@ public class VlogServiceImpl implements VlogService {
         vlog.setUpdatedTime(new Date());
 
         vlogMapper.insert(vlog);
+    }
+
+    public Vlog queryById(String vlogId) {
+        Vlog vlog = vlogMapper.selectByPrimaryKey(vlogId);
+
+        return vlog;
     }
 }

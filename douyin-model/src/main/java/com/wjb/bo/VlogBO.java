@@ -17,7 +17,6 @@ public class VlogBO {
 
     private String id;
     @NotBlank(message = "vlogerId不能为空")
-    @VlogIdValid
     private String vlogerId;
     @NotBlank(message = "url不能为空")
     @Pattern(regexp = "(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]",message = "url不正确")
