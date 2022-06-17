@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import javax.validation.constraints.NotBlank;
 import java.util.Date;
 
 @Data
@@ -12,7 +13,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 public class UpdatedUserBO {
-
+    @NotBlank(message = "不能为空")
     private String id;
     private String nickname;
     private String imoocNum;
