@@ -1,6 +1,6 @@
 package com.wjb.controller;
 
-import com.wjb.BaseInfoProperties;
+import com.wjb.service.base.BaseInfoProperties;
 import com.wjb.bo.UpdatedUserBO;
 import com.wjb.config.MinIOConfig;
 import com.wjb.enums.FileTypeEnum;

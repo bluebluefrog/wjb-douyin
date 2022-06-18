@@ -1,6 +1,6 @@
 package com.wjb.interceptor;
 
-import com.wjb.BaseInfoProperties;
+import com.wjb.service.base.BaseInfoProperties;
 import com.wjb.exceptions.GraceException;
 import com.wjb.grace.result.ResponseStatusEnum;
 import com.wjb.utils.IPUtil;

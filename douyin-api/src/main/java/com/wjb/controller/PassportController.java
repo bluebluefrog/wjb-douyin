@@ -3,7 +3,7 @@ package com.wjb.controller;
 import com.wjb.bo.LoginWithAccountBO;
 import com.wjb.bo.RegistLoginBO;
 import com.wjb.grace.result.GraceJSONResult;
-import com.wjb.BaseInfoProperties;
+import com.wjb.service.base.BaseInfoProperties;
 import com.wjb.grace.result.ResponseStatusEnum;
 import com.wjb.pojo.UserAccount;
 import com.wjb.pojo.Users;
