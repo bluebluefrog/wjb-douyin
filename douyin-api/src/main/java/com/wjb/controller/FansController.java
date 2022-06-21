@@ -57,7 +57,7 @@ public class FansController extends BaseInfoProperties {
         redisOperator.increment(REDIS_MY_FANS_COUNTS + ":" + vlogerId, 1);
 
         //我和博主的关联关系 依赖redis 不要储存数据库 避免数据库压力
-        redisOperator.set(REDIS_FANS_AND_VLOGGER_RELATIONSHIP + ":" + userId + ":" + vlogerId, "1");
+        redisOperator.set(REDIS_FANS_AND_VLOGGER_RELATIONSHIP + ":" + userId + ":" + vlogerId,IS_FRIEND);
 
         return GraceJSONResult.ok();
     }

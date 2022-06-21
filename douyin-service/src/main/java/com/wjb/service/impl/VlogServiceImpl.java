@@ -3,15 +3,16 @@ package com.wjb.service.impl;
 import com.github.pagehelper.PageHelper;
 import com.wjb.bo.VlogBO;
 import com.wjb.enums.YesOrNo;
-import com.wjb.exceptions.GraceException;
-import com.wjb.grace.result.ResponseStatusEnum;
+import com.wjb.mappers.MyLikedVlogMapper;
 import com.wjb.mappers.VlogMapper;
 import com.wjb.mappers.VlogMapperCustom;
+import com.wjb.pojo.MyLikedVlog;
 import com.wjb.pojo.Vlog;
 import com.wjb.service.VlogService;
 import com.wjb.service.base.BaseInfoProperties;
 import com.wjb.utils.PagedGridResult;
 import com.wjb.vo.IndexVlogVO;
+import com.wjb.vo.VlogerVO;
 import org.apache.commons.lang3.StringUtils;
 import org.n3r.idworker.Sid;
 import org.springframework.beans.BeanUtils;
@@ -34,6 +35,9 @@ public class VlogServiceImpl extends BaseInfoProperties implements VlogService {
 
     @Autowired
     private VlogMapperCustom vlogMapperCustom;
+
+    @Autowired
+    private MyLikedVlogMapper myLikedVlogMapper;
 
     @Autowired
     private Sid sid;
@@ -65,7 +69,7 @@ public class VlogServiceImpl extends BaseInfoProperties implements VlogService {
     }
 
 
-    public PagedGridResult getIndexVlogList(String search, Integer page, Integer pageSize) {
+    public PagedGridResult getIndexVlogList(String search,String  userId,Integer page, Integer pageSize) {
 
         //使用pageHelper做分页
         //pageHelper在查询之后会对查询后的方法做拦截将返回的数据做limit 省去在sql中做limit
@@ -79,8 +83,40 @@ public class VlogServiceImpl extends BaseInfoProperties implements VlogService {
 
         List<IndexVlogVO> indexVlogList = vlogMapperCustom.getIndexVlogList(map);
 
+        //查询视频是否被点赞
+        for (IndexVlogVO v : indexVlogList) {
+            String vlogId = v.getVlogId();
+            String vlogerId = v.getVlogerId();
+
+            if (StringUtils.isNotBlank(userId)) {
+                boolean doILike = doILikeVlog(userId, vlogId);
+                v.setDoILikeThisVlog(doILike);
+            }
+
+            //查询视频被点赞的数量
+            Integer vlogBeLikedCounts = getVlogBeLikedCounts(vlogId);
+            v.setLikeCounts(vlogBeLikedCounts);
+        }
+
         //对PagedGridResult属性做封装
         return setterPagedGrid(indexVlogList, page);
+    }
+
+    public Integer getVlogBeLikedCounts(String vlogId) {
+        String count = redisOperator.get(REDIS_VLOG_BE_LIKED_COUNTS + ":" + vlogId);
+        if (StringUtils.isNotBlank(count)) {
+            return Integer.valueOf(count);
+        }
+        return 0;
+    }
+
+    private boolean doILikeVlog(String userId,String vlogId){
+        String doILike = redisOperator.get(REDIS_USER_LIKE_VLOG + ":" + userId + ":" + vlogId);
+        boolean isLike=false;
+        if (StringUtils.isNotBlank(doILike) && doILike.equalsIgnoreCase("1")) {
+            isLike = true;
+        }
+        return isLike;
     }
 
     public IndexVlogVO getVlogById(String vlogId) {
@@ -124,4 +160,57 @@ public class VlogServiceImpl extends BaseInfoProperties implements VlogService {
         return setterPagedGrid(vlogs,page);
     }
 
+    @Transactional
+    public void userLikeVlog(String userId, String vlogId) {
+
+        //可以增加判空校验以及数据库查询id是否存在校验
+        //CAN ADD
+
+        String rid = sid.nextShort();
+        MyLikedVlog myLikedVlog = new MyLikedVlog();
+        myLikedVlog.setId(rid);
+        myLikedVlog.setVlogId(vlogId);
+        myLikedVlog.setUserId(userId);
+
+        myLikedVlogMapper.insert(myLikedVlog);
+    }
+
+    @Transactional
+    public void userUnLikeVlog(String userId, String vlogId) {
+        MyLikedVlog myLikedVlog = new MyLikedVlog();
+        myLikedVlog.setVlogId(vlogId);
+        myLikedVlog.setUserId(userId);
+
+        //根据属性删除
+        myLikedVlogMapper.delete(myLikedVlog);
+    }
+
+
+    public PagedGridResult getMyLikedVlogList(String userId, Integer page, Integer pageSize) {
+
+        PageHelper.startPage(page, pageSize);
+        Map map = new HashMap<>();
+        map.put("userId", userId);
+        List<IndexVlogVO> myLikedVlogList = vlogMapperCustom.getMyLikedVlogList(map);
+
+        return setterPagedGrid(myLikedVlogList,page);
+    }
+
+    public PagedGridResult getMyFollowVlogList(String userId, Integer page, Integer pageSize) {
+        PageHelper.startPage(page, pageSize);
+        Map map = new HashMap<>();
+        map.put("userId", userId);
+        List<IndexVlogVO> myLikedVlogList = vlogMapperCustom.getMyFollowVlogList(map);
+
+        return setterPagedGrid(myLikedVlogList,page);
+    }
+
+    public PagedGridResult getMyFriendVlogList(String userId, Integer page, Integer pageSize) {
+        PageHelper.startPage(page, pageSize);
+        Map map = new HashMap<>();
+        map.put("userId", userId);
+        List<IndexVlogVO> myLikedVlogList = vlogMapperCustom.getMyFriendVlogList(map);
+
+        return setterPagedGrid(myLikedVlogList,page);
+    }
 }

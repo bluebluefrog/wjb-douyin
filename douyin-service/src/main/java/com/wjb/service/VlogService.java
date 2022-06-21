@@ -13,11 +13,23 @@ public interface VlogService {
 
     Vlog queryById(String vlogId);
 
-    PagedGridResult getIndexVlogList(String search, Integer page, Integer pageSize);
+    PagedGridResult getIndexVlogList(String search,String userId,Integer page, Integer pageSize);
+
+    Integer getVlogBeLikedCounts(String vlogId);
 
     IndexVlogVO getVlogById(String vlogId);
 
     void changePrivateOrPublic(String userId, String vlogId, Integer yesOrNo);
 
     PagedGridResult queryMyVlogList(String userId, Integer page, Integer pageSize, Integer yesOrNo);
+
+    void userLikeVlog(String userId,String vlogId);
+
+    void userUnLikeVlog(String userId, String vlogId);
+
+    PagedGridResult getMyLikedVlogList(String userId, Integer page, Integer pageSize);
+
+    PagedGridResult getMyFollowVlogList(String userId, Integer page, Integer pageSize);
+
+    PagedGridResult getMyFriendVlogList(String userId, Integer page, Integer pageSize);
 }

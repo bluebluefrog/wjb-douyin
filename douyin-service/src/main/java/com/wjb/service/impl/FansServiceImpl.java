@@ -6,12 +6,14 @@ import com.wjb.exceptions.GraceException;
 import com.wjb.grace.result.ResponseStatusEnum;
 import com.wjb.mappers.FansMapper;
 import com.wjb.mappers.FansMapperCustom;
+import com.wjb.mappers.MyLikedVlogMapper;
 import com.wjb.pojo.Fans;
 import com.wjb.service.FansService;
 import com.wjb.service.base.BaseInfoProperties;
 import com.wjb.utils.PagedGridResult;
 import com.wjb.vo.FansVO;
 import com.wjb.vo.VlogerVO;
+import org.apache.commons.lang3.StringUtils;
 import org.n3r.idworker.Sid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -122,12 +124,33 @@ public class FansServiceImpl extends BaseInfoProperties implements FansService {
 
 
     public PagedGridResult queryMyFanList(String userId, Integer page, Integer pageSize) {
+
+ /*     判断粉丝是否互粉
+        普通做法
+        多表关联+嵌套查询 这样会违反多表关联规范 高并发会出问题
+        常规做法
+        1避免过多表关联 先查询我的粉里列表
+        2判断粉丝关注我并且我也关注粉丝 ->循环粉丝list获取每一个粉丝 再去数据库查询是否关注
+        3如果我也关注粉丝则为互粉 标记flag为true
+        高端做法
+        1关注取关的时候 关联关系保存在redis中 不依赖数据库
+        2数据库查询后 直接循环查询redis 避免第二次查询数据库
+*/
+
         PageHelper.startPage(page, pageSize);
 
         Map map = new HashMap<>();
         map.put("myId", userId);
 
         List<FansVO> followList = fansMapperCustom.queryMyFans(map);
+
+//        //判断粉丝是否互粉
+        for (FansVO fans : followList) {
+            String relation = redisOperator.get(REDIS_FANS_AND_VLOGGER_RELATIONSHIP + ":" + userId + ":" + fans.getFanId());
+            if (StringUtils.isNotBlank(relation) && relation.equalsIgnoreCase(IS_FRIEND)) {
+                fans.setFriend(true);
+            }
+        }
 
         return setterPagedGrid(followList, page);
     }

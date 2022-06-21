@@ -16,4 +16,5 @@ public interface FansService {
     PagedGridResult queryMyFollowList(String userId, Integer page, Integer pageSize);
 
     PagedGridResult queryMyFanList(String userId, Integer page, Integer pageSize);
+
 }

@@ -61,8 +61,6 @@
         SELECT
             v.id as vlogId,
             v.vloger_id as vlogerId,
---             u.face as vlogerFace,
---             u.nickname as vlogerName,
             v.title as content,
             v.url as url,
             v.cover as cover,
@@ -117,7 +115,7 @@
         WHERE
             v.is_private = 0
           AND
-            f.fan_id = #{paramMap.myId}
+            f.fan_id = #{paramMap.userId}
         ORDER BY
             v.created_time
         DESC
@@ -150,7 +148,7 @@
         WHERE
             v.is_private = 0
           AND
-            f.vloger_id = #{paramMap.myId}
+            f.vloger_id = #{paramMap.userId}
           AND
             f.is_fan_friend_of_mine = 1
         ORDER BY

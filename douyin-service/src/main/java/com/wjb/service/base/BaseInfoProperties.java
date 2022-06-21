@@ -42,6 +42,7 @@ public class BaseInfoProperties {
 
     // 用户是否喜欢/点赞视频，取代数据库的关联关系，1：喜欢，0：不喜欢（默认） redis_user_like_vlog:{userId}:{vlogId}
     public static final String REDIS_USER_LIKE_VLOG = "redis_user_like_vlog";
+    public static final String IS_FRIEND = "1";
 
     public PagedGridResult setterPagedGrid(List<?> list,
                                            Integer page) {
