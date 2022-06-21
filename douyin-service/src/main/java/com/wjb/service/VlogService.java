@@ -17,7 +17,7 @@ public interface VlogService {
 
     Integer getVlogBeLikedCounts(String vlogId);
 
-    IndexVlogVO getVlogById(String vlogId);
+    IndexVlogVO getVlogById(String vlogId,String userId);
 
     void changePrivateOrPublic(String userId, String vlogId, Integer yesOrNo);
 
