@@ -1,8 +1,13 @@
 package com.wjb.controller;
 
 import com.wjb.bo.CommentBO;
+import com.wjb.enums.MessageEnum;
 import com.wjb.grace.result.GraceJSONResult;
+import com.wjb.pojo.Comment;
+import com.wjb.pojo.Vlog;
 import com.wjb.service.CommentService;
+import com.wjb.service.MsgService;
+import com.wjb.service.VlogService;
 import com.wjb.service.base.BaseInfoProperties;
 import com.wjb.utils.PagedGridResult;
 import com.wjb.vo.CommentVO;
@@ -12,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @RestController()
@@ -20,6 +27,12 @@ public class CommentController extends BaseInfoProperties {
 
     @Autowired
     private CommentService commentService;
+
+    @Autowired
+    private MsgService msgService;
+
+    @Autowired
+    private VlogService vlogService;
 
     @PostMapping("create")
     public GraceJSONResult create(@RequestBody @Valid CommentBO commentBO) {
@@ -68,6 +81,16 @@ public class CommentController extends BaseInfoProperties {
 //      redisOperator.setHashValue(REDIS_USER_LIKE_COMMENT, userId, "1");
         redisOperator.increment(REDIS_VLOG_COMMENT_LIKED_COUNTS + ":" + commentId, 1);
         redisOperator.set(REDIS_USER_LIKE_COMMENT + ":" + userId + ":" + commentId, "1");
+
+        //系统消息
+        Comment comment = commentService.getComment(commentId);
+        Vlog vlog = vlogService.getVlog(comment.getVlogId());
+        Map msgContent=new HashMap<>();
+        msgContent.put("vlogId", vlog.getId());
+        msgContent.put("vlogCover", vlog.getCover());
+        msgContent.put("commentId", commentId);
+
+        msgService.createMsg(userId, comment.getCommentUserId(), MessageEnum.LIKE_COMMENT.type, msgContent);
 
         return GraceJSONResult.ok();
     }

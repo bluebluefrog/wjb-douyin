@@ -1,14 +1,15 @@
 package com.wjb.service.impl;
 
 import com.github.pagehelper.PageHelper;
+import com.wjb.enums.MessageEnum;
 import com.wjb.enums.YesOrNo;
 import com.wjb.exceptions.GraceException;
 import com.wjb.grace.result.ResponseStatusEnum;
 import com.wjb.mappers.FansMapper;
 import com.wjb.mappers.FansMapperCustom;
-import com.wjb.mappers.MyLikedVlogMapper;
 import com.wjb.pojo.Fans;
 import com.wjb.service.FansService;
+import com.wjb.service.MsgService;
 import com.wjb.service.base.BaseInfoProperties;
 import com.wjb.utils.PagedGridResult;
 import com.wjb.vo.FansVO;
@@ -32,6 +33,9 @@ public class FansServiceImpl extends BaseInfoProperties implements FansService {
 
     @Autowired
     private FansMapperCustom fansMapperCustom;
+
+    @Autowired
+    private MsgService msgService;
 
     @Autowired
     private Sid sid;
@@ -69,6 +73,9 @@ public class FansServiceImpl extends BaseInfoProperties implements FansService {
             fans.setIsFanFriendOfMine(YesOrNo.NO.type);
         }
         fansMapper.insert(fans);
+
+        //发送关注消息
+        msgService.createMsg(userId, vlogerId, MessageEnum.FOLLOW_YOU.type, null);
     }
 
     public Fans queryFansRelationShip(String fanId, String vlogerId) {

@@ -2,19 +2,19 @@ package com.wjb.service.impl;
 
 import com.github.pagehelper.PageHelper;
 import com.wjb.bo.VlogBO;
+import com.wjb.enums.MessageEnum;
 import com.wjb.enums.YesOrNo;
 import com.wjb.mappers.MyLikedVlogMapper;
 import com.wjb.mappers.VlogMapper;
 import com.wjb.mappers.VlogMapperCustom;
-import com.wjb.pojo.Fans;
 import com.wjb.pojo.MyLikedVlog;
 import com.wjb.pojo.Vlog;
 import com.wjb.service.FansService;
+import com.wjb.service.MsgService;
 import com.wjb.service.VlogService;
 import com.wjb.service.base.BaseInfoProperties;
 import com.wjb.utils.PagedGridResult;
 import com.wjb.vo.IndexVlogVO;
-import com.wjb.vo.VlogerVO;
 import org.apache.commons.lang3.StringUtils;
 import org.n3r.idworker.Sid;
 import org.springframework.beans.BeanUtils;
@@ -43,6 +43,9 @@ public class VlogServiceImpl extends BaseInfoProperties implements VlogService {
 
     @Autowired
     private FansService fansService;
+
+    @Autowired
+    private MsgService msgService;
 
     @Autowired
     private Sid sid;
@@ -198,6 +201,20 @@ public class VlogServiceImpl extends BaseInfoProperties implements VlogService {
         myLikedVlog.setUserId(userId);
 
         myLikedVlogMapper.insert(myLikedVlog);
+
+
+        //系统消息点赞短视频
+        Vlog vlog = this.getVlog(vlogId);
+        Map msgContent=new HashMap<>();
+        msgContent.put("vlogId", vlogId);
+        msgContent.put("vlogCover", vlog.getCover());
+
+
+        msgService.createMsg(userId, vlog.getVlogerId(), MessageEnum.LIKE_VLOG.type, msgContent);
+    }
+
+    public Vlog getVlog(String vlogId) {
+        return vlogMapper.selectByPrimaryKey(vlogId);
     }
 
     @Transactional

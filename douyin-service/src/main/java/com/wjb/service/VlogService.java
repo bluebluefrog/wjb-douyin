@@ -25,6 +25,8 @@ public interface VlogService {
 
     void userLikeVlog(String userId,String vlogId);
 
+    Vlog getVlog(String vlogId);
+
     void userUnLikeVlog(String userId, String vlogId);
 
     PagedGridResult getMyLikedVlogList(String userId, Integer page, Integer pageSize);

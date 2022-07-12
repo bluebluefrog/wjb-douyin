@@ -21,10 +21,10 @@ spring:
     port: 6379
     database: 0 #redis默认16个db 不同项目可以使用不同redis db 集群没有db
     password: 123456
-#  data:
-#    mongodb:
-#      uri: mongodb://root:root@192.168.1.202:27017
-#      database: imooc-red-book
+  data:
+    mongodb:
+      uri: mongodb://root:123456@192.168.0.182:27017
+      database: wjb-douyin
 
 
 # MinIO 配置
