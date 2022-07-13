@@ -7,15 +7,19 @@ import com.wjb.exceptions.GraceException;
 import com.wjb.grace.result.ResponseStatusEnum;
 import com.wjb.mappers.FansMapper;
 import com.wjb.mappers.FansMapperCustom;
+import com.wjb.mo.MessageMO;
 import com.wjb.pojo.Fans;
 import com.wjb.service.FansService;
 import com.wjb.service.MsgService;
 import com.wjb.service.base.BaseInfoProperties;
+import com.wjb.service.base.RabbitMQConfig;
+import com.wjb.utils.JsonUtils;
 import com.wjb.utils.PagedGridResult;
 import com.wjb.vo.FansVO;
 import com.wjb.vo.VlogerVO;
 import org.apache.commons.lang3.StringUtils;
 import org.n3r.idworker.Sid;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,7 +39,7 @@ public class FansServiceImpl extends BaseInfoProperties implements FansService {
     private FansMapperCustom fansMapperCustom;
 
     @Autowired
-    private MsgService msgService;
+    public RabbitTemplate rabbitTemplate;
 
     @Autowired
     private Sid sid;
@@ -74,8 +78,14 @@ public class FansServiceImpl extends BaseInfoProperties implements FansService {
         }
         fansMapper.insert(fans);
 
-        //发送关注消息
-        msgService.createMsg(userId, vlogerId, MessageEnum.FOLLOW_YOU.type, null);
+        //发送创建关注消息
+        //使用rabbitmq解耦
+        MessageMO messageMO = new MessageMO();
+        messageMO.setFromUserId(userId);
+        messageMO.setToUserId(vlogerId);
+        //由于队列中只能存在字符所以需要将对象转换成字符然后发送
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_MSG, "sys.msg.follow", JsonUtils.objectToJson(messageMO));
+
     }
 
     public Fans queryFansRelationShip(String fanId, String vlogerId) {

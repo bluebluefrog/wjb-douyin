@@ -25,7 +25,12 @@ spring:
     mongodb:
       uri: mongodb://root:123456@192.168.0.182:27017
       database: wjb-douyin
-
+  rabbitmq:
+    host: 192.168.0.182
+    port: 5672
+    username: admin
+    password: 123456
+    virtual-host: douyin
 
 # MinIO 配置
 minio:

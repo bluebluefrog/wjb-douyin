@@ -6,16 +6,20 @@ import com.wjb.enums.MessageEnum;
 import com.wjb.enums.YesOrNo;
 import com.wjb.mappers.CommentMapper;
 import com.wjb.mappers.CommentMapperCustom;
+import com.wjb.mo.MessageMO;
 import com.wjb.pojo.Comment;
 import com.wjb.pojo.Vlog;
 import com.wjb.service.CommentService;
 import com.wjb.service.MsgService;
 import com.wjb.service.VlogService;
 import com.wjb.service.base.BaseInfoProperties;
+import com.wjb.service.base.RabbitMQConfig;
+import com.wjb.utils.JsonUtils;
 import com.wjb.utils.PagedGridResult;
 import com.wjb.vo.CommentVO;
 import org.apache.commons.lang3.StringUtils;
 import org.n3r.idworker.Sid;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -35,7 +39,7 @@ public class CommentServiceImpl extends BaseInfoProperties implements CommentSer
     private CommentMapperCustom commentMapperCustom;
 
     @Autowired
-    private MsgService msgService;
+    public RabbitTemplate rabbitTemplate;
 
     @Autowired
     private VlogService vlogService;
@@ -72,6 +76,7 @@ public class CommentServiceImpl extends BaseInfoProperties implements CommentSer
         BeanUtils.copyProperties(comment, commentVO);
 
         //系统消息回复/评论
+        //使用消息队列
         Integer type = MessageEnum.COMMENT_VLOG.type;
         if (StringUtils.isNotBlank(commentBO.getFatherCommentId())
                 && !commentBO.getFatherCommentId().equalsIgnoreCase("0")) {
@@ -84,7 +89,16 @@ public class CommentServiceImpl extends BaseInfoProperties implements CommentSer
         msgContent.put("commentId", commentId);
         msgContent.put("commentContent", commentBO.getContent());
 
-        msgService.createMsg(commentBO.getCommentUserId(), commentBO.getVlogerId(), type, msgContent);
+        MessageMO messageMO = new MessageMO();
+        messageMO.setFromUserId(commentBO.getCommentUserId());
+        messageMO.setToUserId(commentBO.getVlogerId());
+        messageMO.setMsgContent(msgContent);
+
+        if (type.equals(MessageEnum.COMMENT_VLOG.type)) {
+            rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_MSG, "sys.msg.comment", JsonUtils.objectToJson(messageMO));
+        } else {
+            rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_MSG, "sys.msg.reply", JsonUtils.objectToJson(messageMO));
+        }
 
         return commentVO;
     }

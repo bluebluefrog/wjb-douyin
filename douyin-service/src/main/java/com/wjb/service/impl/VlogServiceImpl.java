@@ -7,16 +7,20 @@ import com.wjb.enums.YesOrNo;
 import com.wjb.mappers.MyLikedVlogMapper;
 import com.wjb.mappers.VlogMapper;
 import com.wjb.mappers.VlogMapperCustom;
+import com.wjb.mo.MessageMO;
 import com.wjb.pojo.MyLikedVlog;
 import com.wjb.pojo.Vlog;
 import com.wjb.service.FansService;
 import com.wjb.service.MsgService;
 import com.wjb.service.VlogService;
 import com.wjb.service.base.BaseInfoProperties;
+import com.wjb.service.base.RabbitMQConfig;
+import com.wjb.utils.JsonUtils;
 import com.wjb.utils.PagedGridResult;
 import com.wjb.vo.IndexVlogVO;
 import org.apache.commons.lang3.StringUtils;
 import org.n3r.idworker.Sid;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,7 +49,7 @@ public class VlogServiceImpl extends BaseInfoProperties implements VlogService {
     private FansService fansService;
 
     @Autowired
-    private MsgService msgService;
+    public RabbitTemplate rabbitTemplate;
 
     @Autowired
     private Sid sid;
@@ -204,13 +208,19 @@ public class VlogServiceImpl extends BaseInfoProperties implements VlogService {
 
 
         //系统消息点赞短视频
+        //使用消息隊列
         Vlog vlog = this.getVlog(vlogId);
         Map msgContent=new HashMap<>();
         msgContent.put("vlogId", vlogId);
         msgContent.put("vlogCover", vlog.getCover());
 
+        MessageMO messageMO = new MessageMO();
+        messageMO.setFromUserId(userId);
+        messageMO.setToUserId(vlog.getVlogerId());
+        messageMO.setMsgContent(msgContent);
 
-        msgService.createMsg(userId, vlog.getVlogerId(), MessageEnum.LIKE_VLOG.type, msgContent);
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_MSG, "sys.msg.likeVideo", JsonUtils.objectToJson(messageMO));
+
     }
 
     public Vlog getVlog(String vlogId) {

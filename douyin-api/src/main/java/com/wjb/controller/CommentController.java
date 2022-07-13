@@ -3,16 +3,20 @@ package com.wjb.controller;
 import com.wjb.bo.CommentBO;
 import com.wjb.enums.MessageEnum;
 import com.wjb.grace.result.GraceJSONResult;
+import com.wjb.mo.MessageMO;
 import com.wjb.pojo.Comment;
 import com.wjb.pojo.Vlog;
 import com.wjb.service.CommentService;
 import com.wjb.service.MsgService;
 import com.wjb.service.VlogService;
 import com.wjb.service.base.BaseInfoProperties;
+import com.wjb.service.base.RabbitMQConfig;
+import com.wjb.utils.JsonUtils;
 import com.wjb.utils.PagedGridResult;
 import com.wjb.vo.CommentVO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -29,7 +33,7 @@ public class CommentController extends BaseInfoProperties {
     private CommentService commentService;
 
     @Autowired
-    private MsgService msgService;
+    public RabbitTemplate rabbitTemplate;
 
     @Autowired
     private VlogService vlogService;
@@ -90,7 +94,12 @@ public class CommentController extends BaseInfoProperties {
         msgContent.put("vlogCover", vlog.getCover());
         msgContent.put("commentId", commentId);
 
-        msgService.createMsg(userId, comment.getCommentUserId(), MessageEnum.LIKE_COMMENT.type, msgContent);
+        MessageMO messageMO = new MessageMO();
+        messageMO.setFromUserId(userId);
+        messageMO.setToUserId(comment.getCommentUserId());
+        messageMO.setMsgContent(msgContent);
+
+        rabbitTemplate.convertAndSend(RabbitMQConfig.EXCHANGE_MSG, "sys.msg.likeComment", JsonUtils.objectToJson(messageMO));
 
         return GraceJSONResult.ok();
     }
