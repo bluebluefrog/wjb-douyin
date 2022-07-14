@@ -300,4 +300,14 @@ public class VlogServiceImpl extends BaseInfoProperties implements VlogService {
 
         return setterPagedGrid( myFriendVlogList,page);
     }
+
+    @Transactional
+    public void flushCounts(String vlogId, Integer counts) {
+
+        Vlog vlog = new Vlog();
+        vlog.setId(vlogId);
+        vlog.setLikeCounts(counts);
+
+        vlogMapper.updateByPrimaryKeySelective(vlog);
+    }
 }

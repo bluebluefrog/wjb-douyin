@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: douyin-nacos
+  cloud:
+    nacos:
+      config:
+        server-addr: 192.168.0.182:8848   # nacos 所在的地址
+        file-extension: yaml

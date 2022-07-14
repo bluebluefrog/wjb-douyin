@@ -8,7 +8,10 @@ import com.wjb.service.VlogService;
 import com.wjb.utils.PagedGridResult;
 import com.wjb.vo.IndexVlogVO;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
@@ -16,10 +19,14 @@ import javax.validation.Valid;
 @Slf4j
 @RequestMapping("vlog")
 @RestController
+@RefreshScope
 public class VlogController extends BaseInfoProperties {
 
     @Autowired
     private VlogService vlogService;
+
+    @Value("${nacos.counts}")
+    private Integer nacosCounts;
 
 
     @PostMapping("publish")
@@ -131,6 +138,17 @@ public class VlogController extends BaseInfoProperties {
         redisOperator.increment(REDIS_VLOGER_BE_LIKED_COUNTS + ":" + vlogerId,1);
         //同时点赞视频需要在redis中保存用户点赞关系
         redisOperator.set(REDIS_USER_LIKE_VLOG + ":" + userId + ":" + vlogId, "1");
+
+        //点赞到达阈值更新到数据库
+        String countsStr = redisOperator.get(REDIS_VLOG_BE_LIKED_COUNTS + ":" + vlogId);
+        Integer counts = 0;
+        if (StringUtils.isNotBlank(countsStr)) {
+            counts = Integer.valueOf(countsStr);
+
+            if (counts >= nacosCounts) {
+                vlogService.flushCounts(vlogId, counts);
+            }
+        }
 
         return GraceJSONResult.ok();
     }

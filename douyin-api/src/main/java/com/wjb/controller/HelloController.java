@@ -6,6 +6,8 @@ import com.wjb.utils.MinIOUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +17,7 @@ import java.io.IOException;
 
 @Slf4j
 @RestController
+@RefreshScope
 public class HelloController {
 
     @Autowired
@@ -23,9 +26,18 @@ public class HelloController {
 //    @Autowired
 //    public RabbitTemplate rabbitTemplate;
 
+    @Value("${nacos.counts}")
+    private Integer counts;
+
     @GetMapping("hello")
     public Object hello(){
         return "hello";
+    }
+
+    @GetMapping("nacos")
+    public Object nacos(){
+        System.out.println(counts);
+        return counts;
     }
 
     //MultipartFile form data中传来的file

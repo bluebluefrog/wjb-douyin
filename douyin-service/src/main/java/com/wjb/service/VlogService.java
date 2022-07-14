@@ -34,4 +34,6 @@ public interface VlogService {
     PagedGridResult getMyFollowVlogList(String userId, Integer page, Integer pageSize);
 
     PagedGridResult getMyFriendVlogList(String userId, Integer page, Integer pageSize);
+
+    void flushCounts(String vlogId, Integer counts);
 }

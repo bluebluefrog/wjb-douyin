@@ -31,6 +31,20 @@ spring:
     username: admin
     password: 123456
     virtual-host: douyin
+#  application:
+#    name: douyin-nacos
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.0.182:8848   # nacos 所在的地址
+#      config:
+#        enabled: false
+# 打开监控
+management:
+  endpoint:
+    web:
+      exposure:
+        include: '*'
 
 # MinIO 配置
 minio:
