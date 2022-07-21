@@ -26,14 +26,35 @@ spring:
     mongodb:
       uri: mongodb://root:wjb6791@172.29.0.15:27017
       database: wjb-douyin
-
+  rabbitmq:
+    host: 172.29.0.15
+    port: 5672
+    username: wjb
+    password: wjb6791
+    virtual-host: wjb-douyin
+#  application:
+#    name: douyin-nacos
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 172.29.0.15:8848   # nacos 所在的地址
+#      config:
+#        enabled: false
+# 打开监控
+management:
+  endpoint:
+    web:
+      exposure:
+        include: '*'
 
 # MinIO 配置
 minio:
-  endpoint: http://172.29.0.15:9000      # MinIO服务地址
-  fileHost: http://172.29.0.15:9000      # 文件地址host
+  endpoint: http://43.128.143.37:9000      # MinIO服务地址
+  fileHost: http://43.128.143.37:9000      # 文件地址host
   bucketName: wjb-douyin                      # 存储桶bucket名称
   accessKey: root                         # 用户名
   secretKey: wjb6791!                     # 密码
   imgSize: 1024                           # 图片大小限制，单位：m
   fileSize: 1024                          # 文件大小限制，单位：m
+
+salt: jklqwhdkjqwhduowqhdqwoujdhqwjkldhqwkjd
