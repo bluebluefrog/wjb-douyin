@@ -47,4 +47,16 @@
             <artifactId>knife4j-springdoc-ui</artifactId>
         </dependency>
     </dependencies>
+
+    <!--打包使用-->
+    <build>
+        <finalName>wjb-douyin</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
 </project>
